@@ -462,6 +462,26 @@
       margin: 14px 0;
     }
 
+    /* Highlight colors — visible in both light and dark mode */
+    .hl-pending {
+      background: var(--hl-pending-bg, #b8860b);
+      color: #ffffff;
+      border-radius: 3px;
+      padding: 1px 3px;
+      cursor: pointer;
+    }
+    .hl-applied {
+      background: var(--hl-applied-bg, #2e7d52);
+      color: #ffffff;
+      border-radius: 3px;
+      padding: 1px 3px;
+      cursor: pointer;
+      opacity: 0.85;
+    }
+    /* En dark mode, légèrement plus vifs */
+    [data-theme="dark"] .hl-pending { background: #c8960a; }
+    [data-theme="dark"] .hl-applied { background: #3a9a65; }
+
     /* ── Hidden ── */
     .hidden { display: none !important; }
 
@@ -543,8 +563,29 @@
         <div>
           <select class="api-input" id="modelSelect" onchange="saveModel()">
           </select>
+          <div style="display:flex;gap:8px;align-items:center;margin-top:6px;">
+            <button class="copy-btn" onclick="fetchModels()" id="fetchModelsBtn">
+              ↻ Fetch available models
+            </button>
+            <span id="fetchModelsStatus" style="font-size:11px;color:var(--text-muted);"></span>
+          </div>
         </div>
 
+        <span class="settings-label">Highlight colors</span>
+        <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
+          <label style="font-size:12px;color:var(--text-muted);display:flex;align-items:center;gap:6px;">
+            <span id="previewPending" class="hl-pending" style="padding:2px 8px;">未変更</span>
+            <input type="color" id="colorPending" value="#b8860b"
+                  oninput="updateHighlightColor('pending', this.value)" />
+            Not replaced
+          </label>
+          <label style="font-size:12px;color:var(--text-muted);display:flex;align-items:center;gap:6px;">
+            <span id="previewApplied" class="hl-applied" style="padding:2px 8px;text-decoration:none;">変更済</span>
+            <input type="color" id="colorApplied" value="#2e7d52"
+                  oninput="updateHighlightColor('applied', this.value)" />
+            Replaced
+          </label>
+        </div>
       </div>
     </div>
   </div>
@@ -652,6 +693,17 @@ function init() {
   document.body.setAttribute("data-theme", savedTheme);
   document.getElementById("themeBtn").textContent = savedTheme === "dark" ? "☀ Light" : "☾ Dark";
 
+  const cp = localStorage.getItem("jlm_color_pending");
+  const ca = localStorage.getItem("jlm_color_applied");
+  if (cp) {
+    document.documentElement.style.setProperty("--hl-pending-bg", cp);
+    document.getElementById("colorPending").value = cp;
+  }
+  if (ca) {
+    document.documentElement.style.setProperty("--hl-applied-bg", ca);
+    document.getElementById("colorApplied").value = ca;
+  }
+
   renderTypePills();
   renderLevelPills();
   renderProviderUI();
@@ -725,6 +777,18 @@ function updateSettingsStatus() {
   const el = document.getElementById("settingsStatus");
   el.textContent = state.apiKey ? "✓ Key saved" : "⚠ No key";
   el.style.color = state.apiKey ? "var(--green)" : "var(--accent)";
+}
+
+function updateHighlightColor(type, color) {
+  if (type === "pending") {
+    document.documentElement.style.setProperty("--hl-pending-bg", color);
+    localStorage.setItem("jlm_color_pending", color);
+  } else {
+    document.documentElement.style.setProperty("--hl-applied-bg", color);
+    localStorage.setItem("jlm_color_applied", color);
+  }
+  // Re-render if results visible
+  if (state.hasResult) renderHighlightedResult();
 }
 
 // ─────────────────────────────────────────
@@ -898,6 +962,81 @@ function parsePipeCSV(raw) {
 }
 
 // ─────────────────────────────────────────
+// Models
+// ─────────────────────────────────────────
+async function fetchModels() {
+  const btn    = document.getElementById("fetchModelsBtn");
+  const status = document.getElementById("fetchModelsStatus");
+  if (!state.apiKey) { status.textContent = "No API key set."; return; }
+
+  btn.disabled = true;
+  status.textContent = "Fetching…";
+
+  try {
+    let models = [];
+
+    if (state.provider === "gemini") {
+      const res  = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models?key=${state.apiKey}`
+      );
+      const data = await res.json();
+      if (data.error) throw new Error(data.error.message);
+      models = (data.models || [])
+        .filter(m => m.supportedGenerationMethods?.includes("generateContent"))
+        .map(m => m.name.replace("models/", ""));
+
+    } else if (state.provider === "openai") {
+      const res  = await fetch("https://api.openai.com/v1/models", {
+        headers: { Authorization: `Bearer ${state.apiKey}` }
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error.message);
+      models = (data.data || [])
+        .map(m => m.id)
+        .filter(id => id.startsWith("gpt-"))
+        .sort();
+
+    } else if (state.provider === "anthropic") {
+      const res  = await fetch("https://api.anthropic.com/v1/models", {
+        headers: {
+          "x-api-key": state.apiKey,
+          "anthropic-version": "2023-06-01",
+          "anthropic-dangerous-direct-browser-access": "true",
+        }
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
+      models = (data.data || []).map(m => m.id);
+    }
+
+    if (models.length === 0) throw new Error("No models returned");
+
+    // Repopulate the select
+    const sel   = document.getElementById("modelSelect");
+    const current = sel.value;
+    sel.innerHTML = "";
+    models.forEach(m => {
+      const opt = document.createElement("option");
+      opt.value = m; opt.textContent = m;
+      if (m === current) opt.selected = true;
+      sel.appendChild(opt);
+    });
+    // Keep first if previous selection gone
+    state.model = sel.value;
+    localStorage.setItem("jlm_model_" + state.provider, state.model);
+
+    status.textContent = `✓ ${models.length} models loaded`;
+    status.style.color = "var(--green)";
+
+  } catch (e) {
+    status.textContent = "Error: " + e.message;
+    status.style.color = "var(--red)";
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+// ─────────────────────────────────────────
 // Main analyze
 // ─────────────────────────────────────────
 async function analyze() {
@@ -959,12 +1098,68 @@ function applySubstitutions(text) {
 // ─────────────────────────────────────────
 // Render results
 // ─────────────────────────────────────────
+function renderHighlightedResult() {
+  const text = document.getElementById("inputText").value;
+  const box  = document.getElementById("resultBox");
+
+  if (state.substitutions.length === 0) {
+    box.textContent = text;
+    return;
+  }
+
+  // Build a list of all spans to inject, sorted by position desc
+  // so we can replace without offset issues
+  const spans = [];
+  state.substitutions.forEach(sub => {
+    let idx = 0;
+    while (true) {
+      const pos = text.indexOf(sub.original, idx);
+      if (pos === -1) break;
+      spans.push({ pos, len: sub.original.length, sub });
+      idx = pos + 1;
+    }
+  });
+
+  // Sort by position desc to replace from end to start
+  spans.sort((a, b) => b.pos - a.pos);
+
+  // Deduplicate overlapping spans (keep longest)
+  const clean = [];
+  let lastStart = Infinity;
+  for (const s of spans) {
+    if (s.pos + s.len <= lastStart) {
+      clean.push(s);
+      lastStart = s.pos;
+    }
+  }
+
+  // Build HTML
+  let html = escHtml(text);
+  // We work on the raw text (not escaped) to find positions,
+  // then build HTML by splicing
+  let result = "";
+  let cursor = 0;
+  const sorted = [...clean].sort((a, b) => a.pos - b.pos);
+
+  for (const s of sorted) {
+    result += escHtml(text.slice(cursor, s.pos));
+    const isActive = state.activeIds.has(s.sub.id);
+    const cls = isActive ? "hl-applied" : "hl-pending";
+    const display = isActive ? escHtml(s.sub.simplified) : escHtml(s.sub.original);
+    result += `<span class="${cls}" onclick="toggleRow('${s.sub.id}')" title="${escHtml(s.sub.translation_en)}">${display}</span>`;
+    cursor = s.pos + s.len;
+  }
+  result += escHtml(text.slice(cursor));
+
+  box.innerHTML = result.replace(/\n/g, "<br>");
+}
+
 function renderResults() {
   const text = document.getElementById("inputText").value;
   const simpler = getSimplerLevel();
 
   // Result box
-  document.getElementById("resultBox").textContent = applySubstitutions(text);
+  renderHighlightedResult();
   updateBadge();
   document.getElementById("resultCard").classList.remove("hidden");
 
@@ -1006,10 +1201,9 @@ function renderResults() {
 
 function updateBadge() {
   const n = state.activeIds.size;
-  document.getElementById("subBadge").textContent = `${n} substitution${n !== 1 ? "s" : ""} applied`;
-  // Refresh result text
-  const text = document.getElementById("inputText").value;
-  document.getElementById("resultBox").textContent = applySubstitutions(text);
+  document.getElementById("subBadge").textContent =
+    `${n} substitution${n !== 1 ? "s" : ""} applied`;
+  renderHighlightedResult();
 }
 
 // ─────────────────────────────────────────
