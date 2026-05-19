@@ -603,10 +603,10 @@
     </div>
 
     <!-- JLPT level -->
-    <div class="row">
+    <!-- <div class="row">
       <div class="small-label">My JLPT level — find expressions at this level and suggest simpler alternatives</div>
       <div class="pills" id="levelPills"></div>
-    </div>
+    </div> -->
 
     <button class="analyze-btn" id="analyzeBtn" onclick="analyze()">Analyze &amp; Simplify</button>
     <div class="error-msg hidden" id="errorMsg"></div>
@@ -667,7 +667,7 @@ let state = {
   provider: "openai",
   apiKey: "",
   model: "",
-  myLevel: "N2",
+  // myLevel: "N2",
   textType: "resume",
   substitutions: [],
   activeIds: new Set(),
@@ -681,7 +681,7 @@ function init() {
   // Load saved prefs
   state.provider = localStorage.getItem("jlm_provider") || "openai";
   state.apiKey   = localStorage.getItem("jlm_key_" + state.provider) || "";
-  state.myLevel  = localStorage.getItem("jlm_level") || "N2";
+  // state.myLevel  = localStorage.getItem("jlm_level") || "N2";
   state.textType = localStorage.getItem("jlm_type") || "resume";
   const savedTheme = localStorage.getItem("jlm_theme") || "dark";
   document.body.setAttribute("data-theme", savedTheme);
@@ -811,40 +811,40 @@ function renderTypePills() {
 // ─────────────────────────────────────────
 // Level pills
 // ─────────────────────────────────────────
-function renderLevelPills() {
-  const container = document.getElementById("levelPills");
-  container.innerHTML = "";
-  JLPT_LEVELS.filter((_,i) => i > 0).forEach(l => {
-    const btn = document.createElement("button");
-    const simplerIdx = JLPT_LEVELS.indexOf(l) - 1;
-    const simpler = JLPT_LEVELS[simplerIdx];
-    btn.className = "pill pill-amber" + (l === state.myLevel ? " active" : "");
-    btn.textContent = l === state.myLevel ? `${l} → ${simpler}` : l;
-    btn.onclick = () => {
-      state.myLevel = l;
-      localStorage.setItem("jlm_level", l);
-      renderLevelPills();
-    };
-    container.appendChild(btn);
-  });
-}
+// function renderLevelPills() {
+//   const container = document.getElementById("levelPills");
+//   container.innerHTML = "";
+//   JLPT_LEVELS.filter((_,i) => i > 0).forEach(l => {
+//     const btn = document.createElement("button");
+//     const simplerIdx = JLPT_LEVELS.indexOf(l) - 1;
+//     const simpler = JLPT_LEVELS[simplerIdx];
+//     btn.className = "pill pill-amber" + (l === state.myLevel ? " active" : "");
+//     btn.textContent = l === state.myLevel ? `${l} → ${simpler}` : l;
+//     btn.onclick = () => {
+//       state.myLevel = l;
+//       localStorage.setItem("jlm_level", l);
+//       renderLevelPills();
+//     };
+//     container.appendChild(btn);
+//   });
+// }
 
-function getSimplerLevel() {
-  const idx = JLPT_LEVELS.indexOf(state.myLevel);
-  return JLPT_LEVELS[idx - 1] || "N3";
-}
+// function getSimplerLevel() {
+//   const idx = JLPT_LEVELS.indexOf(state.myLevel);
+//   return JLPT_LEVELS[idx - 1] || "N3";
+// }
 
 // ─────────────────────────────────────────
 // System prompt
 // ─────────────────────────────────────────
 function buildPrompt() {
   const typeObj = TEXT_TYPES.find(t => t.id === state.textType) || TEXT_TYPES[3];
-  return `You are a Japanese language coach helping a non-native speaker (JLPT ${state.myLevel} level) read and write business Japanese more easily.
+  return `You are a Japanese language coach helping a non-native speaker (non-native business Japanese reader level) read and write business Japanese more easily.
 
 Document type: ${typeObj.label}
 Context: ${typeObj.hint}
 
-Your job: scan the text and flag EVERYTHING that could trip up a non-native speaker, even if they passed JLPT ${state.myLevel}. Be generous and inclusive — it is better to flag too much than too little.
+Your job: scan the text and flag EVERYTHING that could trip up a non-native speaker, even if they passed JLPT N2 or N1. Be generous and inclusive — it is better to flag too much than too little.
 
 Flag all of the following:
 - Keigo and formal business expressions (〜いたします、〜ございます、〜いただく、志望いたしました, etc.)
