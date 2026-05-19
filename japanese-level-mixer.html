@@ -552,7 +552,13 @@
   <!-- Input -->
   <div class="card">
     <span class="section-label">Your Japanese Text</span>
-    <textarea id="inputText" rows="6" placeholder="ここにテキストを貼り付けてください…"></textarea>
+    <textarea id="inputText" rows="6" placeholder="ここにテキストを貼り付けてください…" oninput="updateCharCount()"></textarea>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:5px;">
+      <span id="charWarning" style="font-size:11px;font-style:italic;color:var(--accent);display:none;">
+        ⚠ Long text may hit token limits. Consider splitting into smaller chunks.
+      </span>
+      <span id="charCount" style="font-size:11px;color:var(--text-muted);margin-left:auto;">0 chars</span>
+    </div>
 
     <!-- Document type -->
     <div class="row">
@@ -618,7 +624,7 @@ const TEXT_TYPES = [
 ];
 const PROVIDERS = {
   openai:    { name:"OpenAI",    models:["gpt-4o","gpt-4o-mini","gpt-4-turbo"], hint:'Get your key at <a href="https://platform.openai.com/api-keys" target="_blank">platform.openai.com</a>' },
-  gemini:    { name:"Gemini",    models:["gemini-1.5-flash","gemini-1.5-pro","gemini-2.0-flash", "gemini-2.5-flash"], hint:'Get your free key at <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com</a> — free tier available' },
+  gemini:    { name:"Gemini",    models:["gemini-2.5-flash","gemini-2.0-flash","gemini-1.5-flash","gemini-1.5-pro"], hint:'Get your free key at <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com</a> — free tier available' },
   anthropic: { name:"Anthropic", models:["claude-sonnet-4-5","claude-haiku-4-5-20251001"], hint:'Get your key at <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a>' },
 };
 
@@ -790,30 +796,18 @@ Flag all of the following:
 - Business/HR/corporate jargon (前職、担当、貢献、保有 used formally, etc.)
 - Context-specific nuances: e.g. for spoken/interview contexts, flag 貴社 and suggest 御社; for written contexts, flag 御社 and suggest 貴社
 
-For each flagged item, provide:
-- The exact original substring from the text
-- A simpler everyday Japanese equivalent that fits the document type context
-- An English translation of the original expression
-- A short English explanation of why it was flagged (register, formality level, context note)
-
-Return ONLY a valid JSON object, no markdown, no explanation:
-{
-  "substitutions": [
-    {
-      "id": "1",
-      "original": "exact substring from the text",
-      "simplified": "simpler equivalent appropriate for the document type",
-      "translation_en": "English translation of the original expression",
-      "explanation_en": "short explanation in English (max 10 words)"
-    }
-  ]
-}
+Return ONLY lines in this exact pipe-delimited format, one expression per line, no header, no markdown, no extra text:
+original|simplified|translation_en|note
 
 Rules:
-- "original" must be copied VERBATIM from the input text — do not paraphrase or shorten it
-- Preserve grammatical context in "simplified" (particles, verb endings)
-- Do not duplicate — if an expression appears twice, list it once
-- If truly nothing to flag, return {"substitutions": []}`;
+- original: exact substring copied VERBATIM from the input text
+- simplified: simpler equivalent appropriate for the document type
+- translation_en: English translation of original (max 6 words)
+- note: why it was flagged (max 6 words, e.g. "keigo humble form", "formal compound noun")
+- Delimiter is | — never use | inside any field value
+- Preserve grammatical context in simplified (particles, verb endings)
+- Do not duplicate expressions
+- If nothing to flag, output exactly: NONE`;
 }
 
 // ─────────────────────────────────────────
@@ -849,12 +843,15 @@ async function callGemini(prompt, text) {
     body: JSON.stringify({
       system_instruction: { parts: [{ text: prompt }] },
       contents: [{ parts: [{ text: `Text to analyze:\n${text}` }] }],
-      generationConfig: { maxOutputTokens: 2000 },
+      generationConfig: {
+        maxOutputTokens: 8192,
+        thinkingConfig: { thinkingBudget: 0 }, // disable thinking — saves ~3000 tokens
+      },
     }),
   });
   const data = await res.json();
   if (data.error) throw new Error(data.error.message);
-  return data.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
+  return data.candidates?.[0]?.content?.parts?.[0]?.text || "NONE";
 }
 
 async function callAnthropic(prompt, text) {
@@ -876,6 +873,28 @@ async function callAnthropic(prompt, text) {
   const data = await res.json();
   if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
   return data.content?.[0]?.text || "{}";
+}
+
+// ─────────────────────────────────────────
+// Parse pipe-delimited CSV response
+// ─────────────────────────────────────────
+function parsePipeCSV(raw) {
+  if (!raw || raw.trim() === "NONE") return [];
+  return raw
+    .split("\n")
+    .map(line => line.trim())
+    .filter(line => line.includes("|") && !line.startsWith("original|")) // skip header if any
+    .map((line, i) => {
+      const parts = line.split("|");
+      return {
+        id: String(i + 1),
+        original:       (parts[0] || "").trim(),
+        simplified:     (parts[1] || "").trim(),
+        translation_en: (parts[2] || "").trim(),
+        explanation_en: (parts[3] || "").trim(),
+      };
+    })
+    .filter(s => s.original && s.simplified);
 }
 
 // ─────────────────────────────────────────
@@ -911,9 +930,8 @@ async function analyze() {
     else if (state.provider === "gemini") raw = await callGemini(prompt, text);
     else                                raw = await callAnthropic(prompt, text);
 
-    const clean = raw.replace(/```json|```/g, "").trim();
-    const parsed = JSON.parse(clean);
-    state.substitutions = parsed.substitutions || [];
+    const clean = raw.replace(/```[a-z]*/g, "").replace(/```/g, "").trim();
+    state.substitutions = parsePipeCSV(clean);
     state.hasResult = true;
     renderResults();
   } catch (e) {
@@ -1033,6 +1051,14 @@ function updateToggleAllBtn() {
 // ─────────────────────────────────────────
 // Helpers
 // ─────────────────────────────────────────
+function updateCharCount() {
+  const text = document.getElementById("inputText").value;
+  const len = text.length;
+  document.getElementById("charCount").textContent = `${len} chars`;
+  // ~500 Japanese chars ≈ 1500 tokens input; warn above 600
+  document.getElementById("charWarning").style.display = len > 600 ? "inline" : "none";
+}
+
 function copyResult() {
   const text = document.getElementById("resultBox").textContent;
   navigator.clipboard.writeText(text).then(() => {
