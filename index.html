@@ -563,6 +563,13 @@
         <div>
           <select class="api-input" id="modelSelect" onchange="saveModel()">
           </select>
+          
+          <div style="display:flex;gap:8px;align-items:center;margin-top:6px;">
+            <button class="copy-btn" onclick="fetchModels()" id="fetchModelsBtn">
+              ↻ Fetch available models
+            </button>
+            <span id="fetchModelsStatus" style="font-size:11px;color:var(--text-muted);"></span>
+          </div>
         </div>
 
         <span class="settings-label">Highlight colors</span>
@@ -699,7 +706,7 @@ function init() {
   }
 
   renderTypePills();
-  renderLevelPills();
+  // renderLevelPills();
   renderProviderUI();
 }
 
@@ -966,13 +973,19 @@ async function fetchModels() {
   btn.disabled = true;
   status.textContent = "Fetching…";
 
+  const modelUrls = {
+    openai: "https://api.openai.com/v1/models",
+    gemini: `https://generativelanguage.googleapis.com/v1beta/models?key=${state.apiKey}`,
+    anthropic: "https://api.anthropic.com/v1/models",
+  };
+
   try {
     let models = [];
 
     if (state.provider === "gemini") {
-      const res  = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models?key=${state.apiKey}`
-      );
+      const res  = await fetch(modelUrls.gemini, {
+        headers: { "Content-Type": "application/json" },
+      });
       const data = await res.json();
       if (data.error) throw new Error(data.error.message);
       models = (data.models || [])
@@ -980,7 +993,7 @@ async function fetchModels() {
         .map(m => m.name.replace("models/", ""));
 
     } else if (state.provider === "openai") {
-      const res  = await fetch("https://api.openai.com/v1/models", {
+      const res  = await fetch(modelUrls.openai, {
         headers: { Authorization: `Bearer ${state.apiKey}` }
       });
       const data = await res.json();
@@ -991,7 +1004,7 @@ async function fetchModels() {
         .sort();
 
     } else if (state.provider === "anthropic") {
-      const res  = await fetch("https://api.anthropic.com/v1/models", {
+      const res  = await fetch(modelUrls.anthropic, {
         headers: {
           "x-api-key": state.apiKey,
           "anthropic-version": "2023-06-01",
@@ -1019,7 +1032,7 @@ async function fetchModels() {
     state.model = sel.value;
     localStorage.setItem("jlm_model_" + state.provider, state.model);
 
-    status.textContent = `✓ ${models.length} models loaded`;
+    status.innerHTML = `<a href="${modelUrls[state.provider]}" target="_blank">✓ ${models.length} models loaded</a>`;
     status.style.color = "var(--green)";
 
   } catch (e) {
@@ -1150,7 +1163,7 @@ function renderHighlightedResult() {
 
 function renderResults() {
   const text = document.getElementById("inputText").value;
-  const simpler = getSimplerLevel();
+  // const simpler = getSimplerLevel();
 
   // Result box
   renderHighlightedResult();
@@ -1160,7 +1173,7 @@ function renderResults() {
   // Table
   document.getElementById("tableCard").classList.remove("hidden");
   document.getElementById("colOriginal").textContent = `${state.myLevel} — original`;
-  document.getElementById("colSimpler").textContent  = `${simpler} — simpler`;
+  // document.getElementById("colSimpler").textContent  = `${simpler} — simpler`;
 
   const tbody = document.getElementById("subTableBody");
   tbody.innerHTML = "";
