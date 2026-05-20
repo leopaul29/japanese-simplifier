@@ -1130,47 +1130,70 @@ function renderHighlightedResult() {
     return;
   }
 
-  // Build a list of all spans to inject, sorted by position desc
-  // so we can replace without offset issues
+  // ── Build stripped version + position map ──────────────────
+  // map[strippedIndex] = originalIndex
+  const furiganaRe = /（[\u3040-\u309F\u30A0-\u30FF]+）/g;
+  const skips = [...text.matchAll(furiganaRe)]
+    .map(m => ({ start: m.index, end: m.index + m[0].length }));
+
+  let stripped = "";
+  const map = []; // map[si] = oi
+  let oi = 0;
+  while (oi <= text.length) {
+    const skip = skips.find(s => s.start === oi);
+    if (skip) {
+      oi = skip.end; // jump over furigana block in original
+      continue;
+    }
+    map[stripped.length] = oi;
+    if (oi < text.length) stripped += text[oi];
+    oi++;
+  }
+  // map[stripped.length] = text.length (sentinel)
+
+  // ── Find spans using stripped text ────────────────────────
   const spans = [];
   state.substitutions.forEach(sub => {
     let idx = 0;
     while (true) {
-      const pos = text.indexOf(sub.original, idx);
+      const pos = stripped.indexOf(sub.original, idx);
       if (pos === -1) break;
-      spans.push({ pos, len: sub.original.length, sub });
+      spans.push({
+        // convert stripped positions back to original positions
+        origStart: map[pos],
+        origEnd:   map[pos + sub.original.length],
+        strippedPos: pos,
+        len: sub.original.length,
+        sub
+      });
       idx = pos + 1;
     }
   });
 
-  // Sort by position desc to replace from end to start
-  spans.sort((a, b) => b.pos - a.pos);
-
-  // Deduplicate overlapping spans (keep longest)
+  // ── Deduplicate overlapping spans (keep longest) ──────────
+  spans.sort((a, b) => b.origStart - a.origStart);
   const clean = [];
   let lastStart = Infinity;
   for (const s of spans) {
-    if (s.pos + s.len <= lastStart) {
+    if (s.origEnd <= lastStart) {
       clean.push(s);
-      lastStart = s.pos;
+      lastStart = s.origStart;
     }
   }
 
-  // Build HTML
-  let html = escHtml(text);
-  // We work on the raw text (not escaped) to find positions,
-  // then build HTML by splicing
+  // ── Build HTML slicing from original text ─────────────────
   let result = "";
   let cursor = 0;
-  const sorted = [...clean].sort((a, b) => a.pos - b.pos);
+  clean.sort((a, b) => a.origStart - b.origStart);
 
-  for (const s of sorted) {
-    result += escHtml(text.slice(cursor, s.pos));
+  for (const s of clean) {
+    result += escHtml(text.slice(cursor, s.origStart));
     const isActive = state.activeIds.has(s.sub.id);
-    const cls = isActive ? "hl-applied" : "hl-pending";
-    const display = isActive ? escHtml(s.sub.simplified) : escHtml(s.sub.original);
-    result += `<span class="${cls}" onclick="toggleRow('${s.sub.id}')" title="${escHtml(s.sub.translation_en)}">${display}</span>`;
-    cursor = s.pos + s.len;
+    const cls      = isActive ? "hl-applied" : "hl-pending";
+    const display  = isActive ? escHtml(s.sub.simplified) : escHtml(s.sub.original);
+    result += `<span class="${cls}" onclick="toggleRow('${s.sub.id}')"
+      title="${escHtml(s.sub.translation_en)}">${display}</span>`;
+    cursor = s.origEnd; // ← key fix: advance by original position, not stripped
   }
   result += escHtml(text.slice(cursor));
 
