@@ -851,7 +851,7 @@ function buildPrompt() {
 Document type: ${typeObj.label}
 Context: ${typeObj.hint}
 
-Your job: scan the text and flag EVERYTHING that could trip up a non-native speaker, even if they passed JLPT N2 or N1. Be generous and inclusive — it is better to flag too much than too little.
+Your job: scan the text and flag EVERYTHING that could trip up a non-native speaker, even if they passed JLPT N2 or N1. Only flag an expression if you can provide a genuinely simpler alternative. If you cannot find a simpler everyday equivalent, do not flag it.
 
 Flag all of the following:
 - Keigo and formal business expressions (〜いたします、〜ございます、〜いただく、志望いたしました, etc.)
@@ -868,11 +868,27 @@ Rules:
 - original: exact substring copied VERBATIM from the input text
 - simplified: simpler equivalent appropriate for the document type
 - translation_en: English translation of original (max 6 words)
-- note: why it was flagged (max 6 words, e.g. "keigo humble form", "formal compound noun")
+- note: what makes it hard (max 6 words) — be specific: "keigo humble form", "passive causative", "business HR jargon", "written-only pattern". Never write just "formal phrasing".
 - Delimiter is | — never use | inside any field value
 - Preserve grammatical context in simplified (particles, verb endings)
 - Do not duplicate expressions
-- If nothing to flag, output exactly: NONE`;
+- If nothing to flag, output exactly: NONE
+
+Do NOT flag:
+- Words with no simpler alternative (original = simplified)
+- Basic vocabulary (common everyday words, numbers, names, annotations like 注１)
+- Foreign proper nouns and names
+- Expressions that are already the simplest possible form
+
+Example of good output:
+志望いたしました|働きたいと思っています|I applied because I want|keigo humble verb form
+即戦力|すぐ役立てる人|immediately useful hire|HR compound noun
+日本語での業務コミュニケーションに支障はございません|日本語で仕事するのに問題ありません|no issues with Japanese at work|double keigo + formal negative
+
+Example of what NOT to output (original = simplified, or no real simplification):
+現代|現代|modern era|formal compound noun   ← WRONG, no simpler form exists
+注１|注１|note 1|formal annotation          ← WRONG, it's an annotation not an expression
+`;
 }
 
 // ─────────────────────────────────────────
