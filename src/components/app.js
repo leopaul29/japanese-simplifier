@@ -15,9 +15,10 @@ const PROVIDERS = {
 };
 
 let state = {
-  provider: "openai",
+  provider: "gemini",
   apiKey: "",
   model: "",
+  prompt: "",
   // myLevel: "N2",
   textType: "resume",
   substitutions: [],
@@ -30,8 +31,13 @@ let state = {
 // ─────────────────────────────────────────
 function init() {
   // Load saved prefs
-  state.provider = localStorage.getItem("jlm_provider") || "openai";
+  state.provider = localStorage.getItem("jlm_provider") || "gemini";
+  if (!document.querySelector('.menu-link[data-provider="' + state.provider + '"]')) {
+    state.provider = "gemini";
+    localStorage.setItem("jlm_provider", state.provider);
+  }
   state.apiKey   = localStorage.getItem("jlm_key_" + state.provider) || "";
+  state.prompt   = localStorage.getItem("jlm_prompt") || "";
   // state.myLevel  = localStorage.getItem("jlm_level") || "N2";
   state.textType = localStorage.getItem("jlm_type") || "resume";
   const savedTheme = localStorage.getItem("jlm_theme") || "dark";
@@ -52,6 +58,11 @@ function init() {
   renderTypePills();
   // renderLevelPills();
   renderProviderUI();
+  const promptInput = document.getElementById("promptInput");
+  if (promptInput) {
+    promptInput.value = state.prompt;
+    promptInput.addEventListener("input", savePrompt);
+  }
   Onboarding.autoStart(); // shows only on first visit
 }
 
@@ -84,6 +95,7 @@ function selectProvider(p) {
   renderProviderUI();
   window.dispatchEvent(new CustomEvent("jlm:providerChanged", { detail: { provider: p } }));
 }
+window.selectProvider = selectProvider;
 
 function renderProviderUI() {
   // Pills
@@ -93,6 +105,19 @@ function renderProviderUI() {
   });
   // Key input
   document.getElementById("apiKeyInput").value = state.apiKey;
+  // Provider check indicator in sidebar
+  document.querySelectorAll('.menu-link[data-provider]').forEach((item) => {
+    const check = item.querySelector('.provider-check');
+    const isActive = item.dataset.provider === state.provider;
+    if (check) {
+      check.classList.toggle('hidden', !state.apiKey || !isActive);
+    }
+    if (isActive) {
+      item.classList.add('bg-slate-100','dark:bg-slate-900','font-semibold');
+    } else {
+      item.classList.remove('bg-slate-100','dark:bg-slate-900','font-semibold');
+    }
+  });
   // Hint
   document.getElementById("apiHint").innerHTML = PROVIDERS[state.provider].hint;
   // Models
@@ -118,13 +143,19 @@ function renderProviderUI() {
   // Hide autocomplete API badge by default when provider changes
   const acBadge = document.getElementById("acApiBadge");
   if (acBadge) acBadge.classList.add("hidden");
-  updateSettingsStatus();
 }
 
 function saveApiKey() {
   state.apiKey = document.getElementById("apiKeyInput").value.trim();
   localStorage.setItem("jlm_key_" + state.provider, state.apiKey);
-  updateSettingsStatus();
+  renderProviderUI();
+}
+
+function savePrompt() {
+  const el = document.getElementById("promptInput");
+  if (!el) return;
+  state.prompt = el.value;
+  localStorage.setItem("jlm_prompt", state.prompt);
 }
 
 function saveModel() {
@@ -132,12 +163,6 @@ function saveModel() {
   if (!sel) return;
   state.model = sel.value;
   localStorage.setItem("jlm_model_" + state.provider, state.model);
-}
-
-function updateSettingsStatus() {
-  const el = document.getElementById("settingsStatus");
-  el.textContent = state.apiKey ? "✓ Key saved" : "⚠ No key";
-  el.style.color = state.apiKey ? "var(--green)" : "var(--accent)";
 }
 
 window.addEventListener("jlm:modelChanged", (event) => {
@@ -212,6 +237,9 @@ function renderTypePills() {
 // System prompt
 // ─────────────────────────────────────────
 function buildPrompt() {
+  if (state.prompt) {
+    return state.prompt;
+  }
   const typeObj = TEXT_TYPES.find(t => t.id === state.textType) || TEXT_TYPES[3];
   return `You are a Japanese language coach helping a non-native speaker (non-native business Japanese reader level) read and write business Japanese more easily.
 

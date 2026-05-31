@@ -37,7 +37,7 @@ const FETCH_ENDPOINTS = {
 
 const tw = {
   dropdown:
-    "absolute left-0 right-0 top-[calc(100%+6px)] z-50 hidden max-h-60 overflow-y-auto rounded-lg border border-[var(--border)] bg-[var(--bg-card)] py-1 shadow-md",
+    "absolute left-0 right-0 top-[calc(100%+6px)] z-50 hidden max-h-[18rem] overflow-y-auto rounded-lg border border-[var(--border)] bg-[var(--bg-card)] py-1 shadow-md",
   section:
     "border-t border-[var(--border-soft)] px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wide text-[var(--text-muted)] first:border-t-0",
   option:
@@ -278,7 +278,7 @@ export function initModelAutocomplete() {
       },
       onSelect(value) {
         localStorage.setItem(`jlm_model_${provider}`, value);
-        setStatus(`Selected: ${value}`, "ok");
+        setStatus("", "");
       },
     },
   );
@@ -290,7 +290,7 @@ export function initModelAutocomplete() {
       const acBadge = document.getElementById("acApiBadge");
       if (acBadge) acBadge.classList.remove("hidden");
       autocomplete.open();
-      setStatus(`${event.detail.models.length} models loaded from API`, "ok");
+      setStatus("", "");
     }
   });
 
@@ -319,7 +319,7 @@ export function initModelAutocomplete() {
       // Show the API badge near the autocomplete input
       const acBadge = document.getElementById("acApiBadge");
       if (acBadge) acBadge.classList.remove("hidden");
-      setStatus(`${models.length} models loaded from API`, "ok");
+      setStatus("", "");
       if (models.length) {
         window.dispatchEvent(new CustomEvent("jlm:modelChanged", { detail: { model: models[0] } }));
       }
