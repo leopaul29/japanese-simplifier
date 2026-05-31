@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Japanese Level Mixer</title>
   <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="ac-styles.css" />
 </head>
 <body data-theme="dark">
 
@@ -67,6 +68,36 @@
             <span id="fetchModelsStatus" style="font-size:11px;color:var(--text-muted);"></span>
           </div>
         </div>
+
+        <span class="settings-label">Autocomplete model</span>
+        <div class="ac-wrap" id="acWrap">
+
+    <div class="ac-row">
+      <input
+        class="ac-input"
+        id="acInput"
+        type="text"
+        placeholder="e.g. gpt-4o, gemini-2.5-flash…"
+        autocomplete="off"
+        spellcheck="false"
+      />
+      <span class="ac-icon">⌕</span>
+
+      <button class="ac-fetch-btn" id="acFetchBtn" title="Fetch available models from API">
+        <span class="ac-fetch-icon" id="acFetchIcon">↻</span>
+        <span id="acFetchLabel">Fetch</span>
+      </button>
+    </div>
+
+    <div class="ac-dropdown" id="acDropdown" role="listbox"></div>
+  </div>
+
+  <div class="ac-status" id="acStatus">Type to search or click Fetch to load from API</div>
+
+  <!-- Demo output -->
+  <div class="demo-output">
+    Selected model: <span id="demoOutput">—</span>
+  </div>
 
         <span class="settings-label">Highlight colors</span>
         <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
@@ -191,5 +222,6 @@
   </div>
 </div>
 <script src="script.js"></script>
+<script src="ac-script.js"></script>
 </body>
 </html>
