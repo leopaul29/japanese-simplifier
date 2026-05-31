@@ -26,7 +26,6 @@ const modalHtml = `
           <div class="mt-6">
             <div class="text-sm font-semibold text-slate-600 dark:text-slate-400">Others</div>
             <div class="mt-2 flex flex-col gap-1">
-              <button class="menu-link text-left px-2 py-1 rounded hover:bg-slate-100 dark:hover:bg-slate-900" data-target="panel-prompt">Prompt</button>
               <button class="menu-link text-left px-2 py-1 rounded hover:bg-slate-100 dark:hover:bg-slate-900" data-target="panel-highlight">Highlight colors</button>
             </div>
           </div>
@@ -82,20 +81,6 @@ const modalHtml = `
                   <div id="acStatus" class="mt-2 text-xs text-slate-500 dark:text-slate-400"></div>
                 </div>
 
-              </div>
-            </div>
-
-            <div id="panel-prompt" class="hidden">
-              <div>
-                <div class="text-sm font-semibold text-slate-600 dark:text-slate-400">Prompt</div>
-                <div class="mt-2">
-                  <textarea
-                    id="promptInput"
-                    rows="8"
-                    class="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-slate-400 dark:focus:ring-slate-800"
-                    placeholder="Edit the prompt sent to the model to request analysis and simplification"
-                  ></textarea>
-                </div>
               </div>
             </div>
 
