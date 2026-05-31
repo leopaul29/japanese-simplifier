@@ -1,4 +1,6 @@
 import "./styles.css";
 import "./components/onboarding.js";
 import "./components/app.js";
-import "./components/autocomplete.js";
+import { initModelAutocomplete } from "./components/Autocomplete.js";
+
+initModelAutocomplete();

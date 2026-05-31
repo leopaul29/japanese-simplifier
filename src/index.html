@@ -69,32 +69,32 @@
         </div>
 
         <span class="settings-label">Autocomplete model</span>
-        <div class="ac-wrap" id="acWrap">
+        <div class="relative" id="acWrap">
 
-    <div class="ac-row">
+    <div class="relative flex gap-2">
       <input
-        class="ac-input"
+        class="min-w-0 flex-1 rounded-lg border border-[var(--border)] bg-[var(--bg-input)] px-3 py-2 pr-9 text-sm text-[var(--text)] shadow-sm outline-none transition-colors placeholder:text-[var(--text-muted)] focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20"
         id="acInput"
         type="text"
         placeholder="e.g. gpt-4o, gemini-2.5-flash…"
         autocomplete="off"
         spellcheck="false"
       />
-      <span class="ac-icon">⌕</span>
+      <span class="pointer-events-none absolute right-[82px] top-1/2 -translate-y-1/2 text-sm text-[var(--text-muted)]">⌕</span>
 
-      <button class="ac-fetch-btn" id="acFetchBtn" title="Fetch available models from API">
-        <span class="ac-fetch-icon" id="acFetchIcon">↻</span>
+      <button class="inline-flex items-center gap-1 rounded-lg border border-[var(--border)] bg-[var(--bg-card)] px-3 py-2 text-xs font-semibold text-[var(--text)] shadow-sm transition-colors hover:border-[var(--accent)] hover:bg-[var(--accent-bg)] disabled:pointer-events-none" id="acFetchBtn" title="Fetch available models from API">
+        <span class="inline-block" id="acFetchIcon" data-ac-fetch-icon>↻</span>
         <span id="acFetchLabel">Fetch</span>
       </button>
     </div>
 
-    <div class="ac-dropdown" id="acDropdown" role="listbox"></div>
+    <div id="acDropdown" role="listbox"></div>
   </div>
 
-  <div class="ac-status" id="acStatus">Type to search or click Fetch to load from API</div>
+  <div class="mt-2 text-xs text-[var(--text-muted)]" id="acStatus">Type to search or click Fetch to load from API</div>
 
   <!-- Demo output -->
-  <div class="demo-output">
+  <div class="mt-4 rounded-lg border border-[var(--border-soft)] bg-[var(--bg-result)] px-3 py-2 text-xs text-[var(--text-muted)]">
     Selected model: <span id="demoOutput">—</span>
   </div>
 
