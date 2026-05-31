@@ -149,6 +149,47 @@
 
 </main>
 
+<!-- ══════════════════════════════════════════════
+     ONBOARDING OVERLAY MARKUP
+     ══════════════════════════════════════════════ -->
+<div id="ob-overlay" class="hidden">
+  <svg id="ob-svg" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <mask id="ob-mask">
+        <!-- White = visible (darkened), Black = transparent (spotlight) -->
+        <rect width="100%" height="100%" fill="white"/>
+        <rect id="ob-hole" x="0" y="0" width="0" height="0" rx="10" fill="black"/>
+      </mask>
+    </defs>
+    <rect
+      width="100%" height="100%"
+      fill="rgba(0,0,0,0.72)"
+      mask="url(#ob-mask)"
+      style="pointer-events:none"
+    />
+  </svg>
+</div>
+
+<!-- Spotlight highlight ring -->
+<div id="ob-ring" class="hidden"></div>
+
+<!-- Click blocker (sits behind tooltip, above overlay) -->
+<div id="ob-backdrop" style="display:none"></div>
+
+<!-- Tooltip card -->
+<div id="ob-tooltip" class="hidden">
+  <div class="ob-step-counter">Step <span id="ob-current">1</span> of <span id="ob-total">5</span></div>
+  <div class="ob-title" id="ob-title"></div>
+  <div class="ob-body"  id="ob-body"></div>
+  <div class="ob-footer">
+    <button class="ob-skip" onclick="Onboarding.end()">Skip tour</button>
+    <div class="ob-dots" id="ob-dots"></div>
+    <div class="ob-nav">
+      <button class="ob-prev" id="ob-prev" onclick="Onboarding.prev()">← Back</button>
+      <button class="ob-next" id="ob-next" onclick="Onboarding.next()">Next →</button>
+    </div>
+  </div>
+</div>
 <script src="script.js"></script>
 </body>
 </html>
