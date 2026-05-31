@@ -42,7 +42,7 @@ function init() {
   state.textType = localStorage.getItem("jlm_type") || "resume";
   const savedTheme = localStorage.getItem("jlm_theme") || "dark";
   document.body.setAttribute("data-theme", savedTheme);
-  document.getElementById("themeBtn").textContent = savedTheme === "dark" ? "☀ Light" : "☾ Dark";
+  document.getElementById("themeBtn").textContent = savedTheme === "dark" ? "☀" : "☾";
 
   const cp = localStorage.getItem("jlm_color_pending");
   const ca = localStorage.getItem("jlm_color_applied");
@@ -73,7 +73,7 @@ function toggleTheme() {
   const current = document.body.getAttribute("data-theme");
   const next = current === "dark" ? "light" : "dark";
   document.body.setAttribute("data-theme", next);
-  document.getElementById("themeBtn").textContent = next === "dark" ? "☀ Light" : "☾ Dark";
+  document.getElementById("themeBtn").textContent = next === "dark" ? "☀" : "☾";
   localStorage.setItem("jlm_theme", next);
 }
 
