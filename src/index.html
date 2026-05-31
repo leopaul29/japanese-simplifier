@@ -17,95 +17,14 @@
         <div class="subtitle">Cherry-pick expressions to simplify — keep what you know, swap what you don't</div>
       </div>
     </div>
-    <div class="header-right">
+    <div class="header-right flex items-center gap-2">
+      <button id="settingsTrigger" class="p-2 rounded hover:bg-gray-100 dark:hover:bg-slate-800" type="button" aria-label="Open settings">⚙️</button>
       <button class="theme-btn" id="themeBtn" onclick="toggleTheme()">☀ Light</button>
     </div>
   </div>
 </header>
 
 <main>
-
-  <!-- API Settings -->
-  <div class="card" id="card-settings">
-    <button class="settings-toggle" onclick="toggleSettings()">
-      <span id="settingsArrow">▸</span>
-      <span>API Settings</span>
-      <span id="settingsStatus" style="font-size:11px; margin-left:4px;"></span>
-    </button>
-    <div class="settings-body hidden" id="settingsBody">
-      <hr class="divider" />
-      <div class="settings-grid">
-
-        <span class="settings-label">Provider</span>
-        <div class="provider-pills">
-          <button class="pill pill-amber active" id="pill-openai" onclick="selectProvider('openai')">OpenAI</button>
-          <button class="pill pill-amber" id="pill-gemini" onclick="selectProvider('gemini')">Gemini</button>
-          <button class="pill pill-amber" id="pill-anthropic" onclick="selectProvider('anthropic')">Anthropic</button>
-        </div>
-
-        <span class="settings-label">How to</span>
-        <div class="api-hint" id="apiHint">Get your free key at aistudio.google.com — free tier available</div>
-
-        <span class="settings-label">API Key</span>
-        <div>
-          <div class="flex gap-2">
-            <input
-              class="api-input min-w-0 flex-1"
-              type="password"
-              id="apiKeyInput"
-              placeholder="Paste your API key here…"
-              oninput="saveApiKey()"
-            />
-            <button class="inline-flex items-center gap-1 rounded-lg border border-[var(--border)] bg-[var(--bg-card)] px-3 py-2 text-xs font-semibold text-[var(--text)] shadow-sm transition-colors hover:border-[var(--accent)] hover:bg-[var(--accent-bg)] disabled:pointer-events-none disabled:opacity-50" onclick="fetchModels()" id="fetchModelsBtn">
-              <span id="fetchModelsIcon">↻</span>
-              <span>Fetch</span>
-            </button>
-          </div>
-          <div class="mt-1 text-[11px] text-[var(--text-muted)]" id="fetchModelsStatus"></div>
-        </div>
-
-        <!-- <span class="settings-label">Model</span>
-        <div>
-          <select class="api-input" id="modelSelect" onchange="saveModel()">
-          </select>
-        </div> -->
-
-        <span class="settings-label">Autocomplete model <span class="ml-1 hidden rounded-full border border-blue-200 bg-blue-50 px-2 py-0.5 text-[9px] font-semibold text-blue-700" id="acApiBadge">API</span></span>
-        <div class="relative" id="acWrap">
-
-    <div class="relative flex gap-2">
-      <input
-        class="min-w-0 flex-1 rounded-lg border border-[var(--border)] bg-[var(--bg-input)] px-3 py-2 pr-9 text-sm text-[var(--text)] shadow-sm outline-none transition-colors placeholder:text-[var(--text-muted)] focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20"
-        id="acInput"
-        type="text"
-        placeholder="e.g. gpt-4o, gemini-2.5-flash…"
-        autocomplete="off"
-        spellcheck="false"
-      />
-      <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-[var(--text-muted)]">⌕</span>
-    </div>
-
-    <div id="acDropdown" role="listbox"></div>
-  </div>
-
-        <span class="settings-label">Highlight colors</span>
-        <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
-          <label style="font-size:12px;color:var(--text-muted);display:flex;align-items:center;gap:6px;">
-            <span id="previewPending" class="hl-pending" style="padding:2px 8px;">未変更</span>
-            <input type="color" id="colorPending" value="#b8860b"
-                  oninput="updateHighlightColor('pending', this.value)" />
-            Not replaced
-          </label>
-          <label style="font-size:12px;color:var(--text-muted);display:flex;align-items:center;gap:6px;">
-            <span id="previewApplied" class="hl-applied" style="padding:2px 8px;text-decoration:none;">変更済</span>
-            <input type="color" id="colorApplied" value="#2e7d52"
-                  oninput="updateHighlightColor('applied', this.value)" />
-            Replaced
-          </label>
-        </div>
-      </div>
-    </div>
-  </div>
 
   <!-- Input -->
   <div class="card" id="card-input">
