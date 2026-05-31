@@ -82,6 +82,7 @@ function selectProvider(p) {
   localStorage.setItem("jlm_provider", p);
   state.apiKey = localStorage.getItem("jlm_key_" + p) || "";
   renderProviderUI();
+  window.dispatchEvent(new CustomEvent("jlm:providerChanged", { detail: { provider: p } }));
 }
 
 function renderProviderUI() {
@@ -96,15 +97,27 @@ function renderProviderUI() {
   document.getElementById("apiHint").innerHTML = PROVIDERS[state.provider].hint;
   // Models
   const sel = document.getElementById("modelSelect");
-  sel.innerHTML = "";
   const saved = localStorage.getItem("jlm_model_" + state.provider);
-  PROVIDERS[state.provider].models.forEach(m => {
-    const opt = document.createElement("option");
-    opt.value = m; opt.textContent = m;
-    if (m === saved) opt.selected = true;
-    sel.appendChild(opt);
-  });
-  state.model = sel.value;
+  if (sel) {
+    sel.innerHTML = "";
+    PROVIDERS[state.provider].models.forEach(m => {
+      const opt = document.createElement("option");
+      opt.value = m; opt.textContent = m;
+      if (m === saved) opt.selected = true;
+      sel.appendChild(opt);
+    });
+    state.model = sel.value;
+  } else {
+    state.model = saved || PROVIDERS[state.provider].models[0];
+  }
+  const fetchStatus = document.getElementById("fetchModelsStatus");
+  if (fetchStatus) {
+    fetchStatus.textContent = "";
+    fetchStatus.style.color = "var(--text-muted)";
+  }
+  // Hide autocomplete API badge by default when provider changes
+  const acBadge = document.getElementById("acApiBadge");
+  if (acBadge) acBadge.classList.add("hidden");
   updateSettingsStatus();
 }
 
@@ -115,7 +128,9 @@ function saveApiKey() {
 }
 
 function saveModel() {
-  state.model = document.getElementById("modelSelect").value;
+  const sel = document.getElementById("modelSelect");
+  if (!sel) return;
+  state.model = sel.value;
   localStorage.setItem("jlm_model_" + state.provider, state.model);
 }
 
@@ -124,6 +139,13 @@ function updateSettingsStatus() {
   el.textContent = state.apiKey ? "✓ Key saved" : "⚠ No key";
   el.style.color = state.apiKey ? "var(--green)" : "var(--accent)";
 }
+
+window.addEventListener("jlm:modelChanged", (event) => {
+  if (event?.detail?.model) {
+    state.model = event.detail.model;
+    localStorage.setItem("jlm_model_" + state.provider, state.model);
+  }
+});
 
 function updateHighlightColor(type, color) {
   if (type === "pending") {
@@ -329,7 +351,12 @@ function parsePipeCSV(raw) {
 async function fetchModels() {
   const btn    = document.getElementById("fetchModelsBtn");
   const status = document.getElementById("fetchModelsStatus");
-  if (!state.apiKey) { status.textContent = "No API key set."; return; }
+  const icon = document.getElementById("fetchModelsIcon");
+  if (!state.apiKey) {
+    status.textContent = "No API key set.";
+    status.style.color = "var(--accent)";
+    return;
+  }
 
   btn.disabled = true;
   status.textContent = "Fetching…";
@@ -379,26 +406,37 @@ async function fetchModels() {
 
     if (models.length === 0) throw new Error("No models returned");
 
-    // Repopulate the select
-    const sel   = document.getElementById("modelSelect");
-    const current = sel.value;
-    sel.innerHTML = "";
-    models.forEach(m => {
-      const opt = document.createElement("option");
-      opt.value = m; opt.textContent = m;
-      if (m === current) opt.selected = true;
-      sel.appendChild(opt);
-    });
-    // Keep first if previous selection gone
-    state.model = sel.value;
-    localStorage.setItem("jlm_model_" + state.provider, state.model);
+    // Repopulate the select if visible, otherwise keep autocomplete-only mode
+    const sel = document.getElementById("modelSelect");
+    if (sel) {
+      const current = sel.value;
+      sel.innerHTML = "";
+      models.forEach(m => {
+        const opt = document.createElement("option");
+        opt.value = m; opt.textContent = m;
+        if (m === current) opt.selected = true;
+        sel.appendChild(opt);
+      });
+      // Keep first if previous selection gone
+      state.model = sel.value;
+      localStorage.setItem("jlm_model_" + state.provider, state.model);
+    } else {
+      state.model = models[0] || state.model;
+      localStorage.setItem("jlm_model_" + state.provider, state.model);
+    }
 
     status.innerHTML = `<a href="${modelUrls[state.provider]}" target="_blank">✓ ${models.length} models loaded</a>`;
     status.style.color = "var(--green)";
+    // Show autocomplete API badge to indicate API models were loaded
+    const acBadge = document.getElementById("acApiBadge");
+    if (acBadge) acBadge.classList.remove("hidden");
+    window.dispatchEvent(new CustomEvent("jlm:apiModelsFetched", { detail: { models } }));
 
   } catch (e) {
     status.textContent = "Error: " + e.message;
     status.style.color = "var(--red)";
+    const acBadge = document.getElementById("acApiBadge");
+    if (acBadge) acBadge.classList.add("hidden");
   } finally {
     btn.disabled = false;
   }
@@ -429,10 +467,14 @@ async function analyze() {
   document.getElementById("card-table").classList.add("hidden");
 
   try {
-    state.model = document.getElementById("modelSelect").value;
+    const sel = document.getElementById("modelSelect");
+    if (sel) {
+      state.model = sel.value;
+    } else {
+      state.model = state.model || localStorage.getItem("jlm_model_" + state.provider) || PROVIDERS[state.provider].models[0];
+    }
     const prompt = buildPrompt();
     let raw;
-
     if (state.provider === "openai")    raw = await callOpenAI(prompt, text);
     else if (state.provider === "gemini") raw = await callGemini(prompt, text);
     else                                raw = await callAnthropic(prompt, text);

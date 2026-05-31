@@ -109,6 +109,7 @@ export function setupAutocomplete(inputId, suggestionsId, data, options = {}) {
     input.value = value;
     options.onInput?.(value);
     options.onSelect?.(value);
+    window.dispatchEvent(new CustomEvent("jlm:modelChanged", { detail: { model: value } }));
     close();
   }
 
@@ -282,9 +283,21 @@ export function initModelAutocomplete() {
     },
   );
 
+  window.addEventListener("jlm:apiModelsFetched", (event) => {
+    if (!event?.detail?.models || !autocomplete) return;
+    autocomplete.addData(event.detail.models, "api");
+    if (event.detail.models.length) {
+      const acBadge = document.getElementById("acApiBadge");
+      if (acBadge) acBadge.classList.remove("hidden");
+      autocomplete.open();
+      setStatus(`${event.detail.models.length} models loaded from API`, "ok");
+    }
+  });
+
   const saved = localStorage.getItem(`jlm_model_${provider}`);
   if (saved && autocomplete) {
     autocomplete.setValue(saved);
+    window.dispatchEvent(new CustomEvent("jlm:modelChanged", { detail: { model: saved } }));
     if (demoOutput) demoOutput.textContent = saved;
   }
 
@@ -301,10 +314,20 @@ export function initModelAutocomplete() {
     try {
       const models = await FETCH_ENDPOINTS[provider](key);
       autocomplete.addData(models, "api");
+      // Open the dropdown so the fetched API models are immediately visible
+      autocomplete.open();
+      // Show the API badge near the autocomplete input
+      const acBadge = document.getElementById("acApiBadge");
+      if (acBadge) acBadge.classList.remove("hidden");
       setStatus(`${models.length} models loaded from API`, "ok");
+      if (models.length) {
+        window.dispatchEvent(new CustomEvent("jlm:modelChanged", { detail: { model: models[0] } }));
+      }
       input?.focus();
     } catch (error) {
       setStatus(`Error: ${error.message}`, "err");
+      const acBadge = document.getElementById("acApiBadge");
+      if (acBadge) acBadge.classList.add("hidden");
     } finally {
       fetchButton.disabled = false;
       fetchButton.classList.remove("opacity-50", "cursor-not-allowed");
