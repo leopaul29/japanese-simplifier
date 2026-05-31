@@ -4,9 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Japanese Level Mixer</title>
-  <link rel="stylesheet" href="styles.css" />
-  <link rel="stylesheet" href="ac-styles.css" />
-  <link rel="stylesheet" href="onboarding.css" />
+  <script type="module" src="/main.js"></script>
 </head>
 <body data-theme="dark">
 
@@ -28,7 +26,7 @@
 <main>
 
   <!-- API Settings -->
-  <div class="card">
+  <div class="card" id="card-settings">
     <button class="settings-toggle" onclick="toggleSettings()">
       <span id="settingsArrow">▸</span>
       <span>API Settings</span>
@@ -120,7 +118,7 @@
   </div>
 
   <!-- Input -->
-  <div class="card">
+  <div class="card" id="card-input">
     <span class="section-label">Your Japanese Text</span>
     <textarea id="inputText" rows="6" placeholder="ここにテキストを貼り付けてください…" oninput="updateCharCount()"></textarea>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-top:5px;">
@@ -148,7 +146,7 @@
   </div>
 
   <!-- Results (hidden until first run) -->
-  <div class="card hidden" id="resultCard">
+  <div class="card hidden" id="card-result">
     <div class="result-header">
       <span class="section-label" style="margin-bottom:0">Result Text</span>
       <span class="badge" id="subBadge">0 substitutions applied</span>
@@ -157,7 +155,7 @@
     <button class="copy-btn" onclick="copyResult()">Copy</button>
   </div>
 
-  <div class="card hidden" id="tableCard">
+  <div class="card hidden" id="card-table">
     <div class="result-header">
       <span class="section-label" style="margin-bottom:0">Substitutions</span>
       <button class="toggle-all-btn" id="toggleAllBtn" onclick="toggleAll()">Select all</button>
@@ -222,8 +220,5 @@
     </div>
   </div>
 </div>
-<script src="script.js"></script>
-<script src="ac-script.js"></script>
-<script src="onboarding-script.js"></script>
 </body>
 </html>

@@ -425,8 +425,8 @@ async function analyze() {
   state.substitutions = [];
   state.activeIds = new Set();
   state.hasResult = false;
-  document.getElementById("resultCard").classList.add("hidden");
-  document.getElementById("tableCard").classList.add("hidden");
+  document.getElementById("card-result").classList.add("hidden");
+  document.getElementById("card-table").classList.add("hidden");
 
   try {
     state.model = document.getElementById("modelSelect").value;
@@ -529,10 +529,10 @@ function renderResults() {
   // Result box
   renderHighlightedResult();
   updateBadge();
-  document.getElementById("resultCard").classList.remove("hidden");
+  document.getElementById("card-result").classList.remove("hidden");
 
   // Table
-  document.getElementById("tableCard").classList.remove("hidden");
+  document.getElementById("card-table").classList.remove("hidden");
   document.getElementById("colOriginal").textContent = `${state.myLevel} — original`;
   // document.getElementById("colSimpler").textContent  = `${simpler} — simpler`;
 
@@ -564,7 +564,7 @@ function renderResults() {
   }
 
   // Scroll to results
-  document.getElementById("resultCard").scrollIntoView({ behavior: "smooth", block: "start" });
+  document.getElementById("card-result").scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 function updateBadge() {
@@ -647,4 +647,19 @@ function escHtml(str) {
 // ─────────────────────────────────────────
 // Boot
 // ─────────────────────────────────────────
+Object.assign(window, {
+  analyze,
+  copyResult,
+  fetchModels,
+  saveApiKey,
+  saveModel,
+  selectProvider,
+  toggleAll,
+  toggleRow,
+  toggleSettings,
+  toggleTheme,
+  updateCharCount,
+  updateHighlightColor,
+});
+
 init();

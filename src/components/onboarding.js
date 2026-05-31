@@ -18,7 +18,7 @@ const STEPS = [
     body: "Choose your AI provider — OpenAI, Gemini, or Anthropic — and paste your API key. The key is saved locally in your browser only and never sent anywhere except to the provider you choose. Gemini has a free tier.",
     },
     {
-    target: "#type-pills",
+    target: "#typePills",
     placement: "bottom",
     title: "Choose the document type",
     body: "This gives the AI context. For example: in a resume 貴社 is correct, but in a spoken interview you should use 御社 instead. The tool will flag the wrong one automatically.",
@@ -258,6 +258,8 @@ function autoStart() {
 return { start, end, next, prev, autoStart };
 
 })();
+
+window.Onboarding = Onboarding;
 
 // ── Keyboard navigation ──────────────────────────────────
 document.addEventListener("keydown", e => {
