@@ -6,11 +6,13 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "vite build",
-    "preview": "vite preview --host 127.0.0.1"
+    "preview": "vite preview --host 127.0.0.1",
+    "format": "prettier --write ."
   },
   "devDependencies": {
     "autoprefixer": "latest",
     "postcss": "latest",
+    "prettier": "^3.8.3",
     "tailwindcss": "^3.4.17",
     "vite": "latest",
     "vite-plugin-purgecss": "latest",
