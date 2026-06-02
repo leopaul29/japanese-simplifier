@@ -31,19 +31,22 @@ Built for JLPT learners who receive business-level Japanese (keigo, compound nou
 ## 🚀 Getting Started
 
 ### Option 1 — Just open it locally
+
 Download `japanese-level-mixer.html` and open it in any browser. That's it.
 
 ### Option 2 — Host it yourself
+
 Drop the file on any static host (GitHub Pages, Netlify, Vercel, your own server). No build step needed.
 
 ### API Key setup
+
 The tool supports three providers. A free tier is available with Gemini:
 
-| Provider  | Free tier | Get your key |
-|-----------|-----------|--------------|
-| **Gemini** | ✅ Yes (gemini-1.5-flash) | [aistudio.google.com](https://aistudio.google.com/app/apikey) |
-| **OpenAI** | ❌ Paid | [platform.openai.com](https://platform.openai.com/api-keys) |
-| **Anthropic** | ❌ Paid | [console.anthropic.com](https://console.anthropic.com) |
+| Provider      | Free tier                 | Get your key                                                  |
+| ------------- | ------------------------- | ------------------------------------------------------------- |
+| **Gemini**    | ✅ Yes (gemini-1.5-flash) | [aistudio.google.com](https://aistudio.google.com/app/apikey) |
+| **OpenAI**    | ❌ Paid                   | [platform.openai.com](https://platform.openai.com/api-keys)   |
+| **Anthropic** | ❌ Paid                   | [console.anthropic.com](https://console.anthropic.com)        |
 
 Gemini's free tier is the recommended starting point if you just want to try the tool.
 

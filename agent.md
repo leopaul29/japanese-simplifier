@@ -1,17 +1,20 @@
 # 📜 agent.md - Translation Tool Project Instructions
 
 ## 🎯 **Context**
+
 Project: Simple translation tool in **vanilla HTML/CSS/JS**.
 Goal: Transform the project into an app with **Vite + Tailwind CSS + PurgeCSS**, with a **single-file build**.
 
 ---
 
 ## 📌 **Technical Requirements**
+
 1. **Build System**:
    - Use **Vite** with `vite-plugin-singlefile` to generate **a single HTML file** (all inlined: CSS, JS, assets).
    - Integrate **Tailwind CSS** (local, no CDN) with **PurgeCSS** to remove unused classes.
 
 2. **Project Structure**:
+
    ```
    /src
    ├── index.html          # Main HTML (navigation, autocomplete, modal)
@@ -42,7 +45,9 @@ Goal: Transform the project into an app with **Vite + Tailwind CSS + PurgeCSS**,
 ---
 
 ## 🛠 **Minimal Required Configurations**
+
 ### `package.json` (devDependencies)
+
 ```json
 {
   "devDependencies": {
@@ -57,16 +62,19 @@ Goal: Transform the project into an app with **Vite + Tailwind CSS + PurgeCSS**,
 ```
 
 ### `vite.config.js`
+
 - Use `vite-plugin-singlefile` + `vite-plugin-purgecss`.
 - Output: **Single HTML file** (`dist/index.html`).
 
 ### `tailwind.config.js`
+
 - Scan `./src/**/*.{html,js}`.
 - Purge unused classes in production.
 
 ---
 
 ## 📝 **Instructions for AI/Dev**
+
 1. **Do not rewrite all the code**: Reuse the existing code and **adapt it**.
 2. **Priorities**:
    - Configure Vite + Tailwind + PurgeCSS.
@@ -78,7 +86,9 @@ Goal: Transform the project into an app with **Vite + Tailwind CSS + PurgeCSS**,
    - Updated `index.html` with navigation + modal.
 
 ---
+
 ## 🚀 **Commands to Run**
+
 ```bash
 npm install -D vite tailwindcss postcss autoprefixer vite-plugin-singlefile vite-plugin-purgecss
 npm run dev    # Test locally

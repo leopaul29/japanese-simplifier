@@ -107,65 +107,72 @@ const modalHtml = `
 </div>
 `;
 
-document.body.insertAdjacentHTML("beforeend", modalHtml);
+document.body.insertAdjacentHTML('beforeend', modalHtml);
 
-const settingsModal = document.getElementById("settings-modal");
-const settingsTrigger = document.getElementById("settingsTrigger");
-const closeModalButton = document.getElementById("close-modal");
+const settingsModal = document.getElementById('settings-modal');
+const settingsTrigger = document.getElementById('settingsTrigger');
+const closeModalButton = document.getElementById('close-modal');
 
 function openSettingsModal() {
   if (!settingsModal) return;
-  settingsModal.classList.remove("hidden");
-  document.body.classList.add("overflow-hidden");
+  settingsModal.classList.remove('hidden');
+  document.body.classList.add('overflow-hidden');
 }
 
 function closeSettingsModal() {
   if (!settingsModal) return;
-  settingsModal.classList.add("hidden");
-  document.body.classList.remove("overflow-hidden");
+  settingsModal.classList.add('hidden');
+  document.body.classList.remove('overflow-hidden');
 }
 
-settingsTrigger?.addEventListener("click", openSettingsModal);
-closeModalButton?.addEventListener("click", closeSettingsModal);
-settingsModal?.addEventListener("click", (event) => {
+settingsTrigger?.addEventListener('click', openSettingsModal);
+closeModalButton?.addEventListener('click', closeSettingsModal);
+settingsModal?.addEventListener('click', (event) => {
   if (event.target === settingsModal) {
     closeSettingsModal();
   }
 });
 
-document.addEventListener("keydown", (event) => {
-  if (event.key === "Escape" && settingsModal && !settingsModal.classList.contains("hidden")) {
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && settingsModal && !settingsModal.classList.contains('hidden')) {
     closeSettingsModal();
   }
 });
 
 // Menu / panel interaction
-;(function setupSettingsMenu(){
+(function setupSettingsMenu() {
   if (!settingsModal) return;
   const menuLinks = settingsModal.querySelectorAll('.menu-link');
   const panels = settingsModal.querySelectorAll('#panel-api, #panel-prompt, #panel-highlight');
 
-  function showPanel(id){
-    panels.forEach(p => { if (p.id === id) p.classList.remove('hidden'); else p.classList.add('hidden'); });
+  function showPanel(id) {
+    panels.forEach((p) => {
+      if (p.id === id) p.classList.remove('hidden');
+      else p.classList.add('hidden');
+    });
   }
 
-  menuLinks.forEach(btn => {
+  menuLinks.forEach((btn) => {
     btn.addEventListener('click', (e) => {
       const target = btn.dataset.target;
       const provider = btn.dataset.provider;
       if (target) showPanel(target);
       if (provider && typeof window.selectProvider === 'function') window.selectProvider(provider);
-      menuLinks.forEach(b => b.classList.remove('bg-slate-100','dark:bg-slate-900','font-semibold'));
-      btn.classList.add('bg-slate-100','dark:bg-slate-900','font-semibold');
+      menuLinks.forEach((b) =>
+        b.classList.remove('bg-slate-100', 'dark:bg-slate-900', 'font-semibold')
+      );
+      btn.classList.add('bg-slate-100', 'dark:bg-slate-900', 'font-semibold');
     });
   });
 
-  function setActiveMenuButton(button){
-    menuLinks.forEach(b => b.classList.remove('bg-slate-100','dark:bg-slate-900','font-semibold'));
-    if (button) button.classList.add('bg-slate-100','dark:bg-slate-900','font-semibold');
+  function setActiveMenuButton(button) {
+    menuLinks.forEach((b) =>
+      b.classList.remove('bg-slate-100', 'dark:bg-slate-900', 'font-semibold')
+    );
+    if (button) button.classList.add('bg-slate-100', 'dark:bg-slate-900', 'font-semibold');
   }
 
-  menuLinks.forEach(btn => {
+  menuLinks.forEach((btn) => {
     btn.addEventListener('click', () => {
       const target = btn.dataset.target;
       const provider = btn.dataset.provider;

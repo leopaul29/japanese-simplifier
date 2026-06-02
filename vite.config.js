@@ -1,13 +1,13 @@
-import { defineConfig } from "vite";
-import { viteSingleFile } from "vite-plugin-singlefile";
-import purgecss from "vite-plugin-purgecss";
+import { defineConfig } from 'vite';
+import { viteSingleFile } from 'vite-plugin-singlefile';
+import purgecss from 'vite-plugin-purgecss';
 
 export default defineConfig({
-  root: "src",
+  root: 'src',
   publicDir: false,
   plugins: [
     purgecss({
-      content: ["./src/**/*.html", "./src/**/*.js"],
+      content: ['./src/**/*.html', './src/**/*.js'],
       safelist: {
         standard: [
           /^hl-/,
@@ -27,7 +27,7 @@ export default defineConfig({
     viteSingleFile(),
   ],
   build: {
-    outDir: "../dist",
+    outDir: '../dist',
     emptyOutDir: true,
     cssCodeSplit: false,
     assetsInlineLimit: 100000000,

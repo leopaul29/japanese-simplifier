@@ -1,133 +1,156 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Japanese Level Mixer</title>
-  <script type="module" src="/main.js"></script>
-</head>
-<body data-theme="dark">
-
-<header>
-  <div class="header-inner">
-    <div class="header-left">
-      <div class="logo-mark">日</div>
-      <div>
-        <h1>Japanese Level Mixer</h1>
-        <div class="subtitle">Cherry-pick expressions to simplify — keep what you know, swap what you don't</div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Japanese Level Mixer</title>
+    <script type="module" src="/main.js"></script>
+  </head>
+  <body data-theme="dark">
+    <header>
+      <div class="header-inner">
+        <div class="header-left">
+          <div class="logo-mark">日</div>
+          <div>
+            <h1>Japanese Level Mixer</h1>
+            <div class="subtitle">
+              Cherry-pick expressions to simplify — keep what you know, swap what you don't
+            </div>
+          </div>
+        </div>
+        <div class="header-right flex items-center gap-2">
+          <button id="settingsTrigger" class="theme-btn" aria-label="Open settings">⚙️</button>
+          <button class="theme-btn" id="themeBtn" onclick="toggleTheme()">☀</button>
+        </div>
       </div>
-    </div>
-    <div class="header-right flex items-center gap-2">
-      <button id="settingsTrigger" class="theme-btn" aria-label="Open settings">⚙️</button>
-      <button class="theme-btn" id="themeBtn" onclick="toggleTheme()">☀</button>
-    </div>
-  </div>
-</header>
+    </header>
 
-<main>
+    <main>
+      <!-- Input -->
+      <div class="card" id="card-input">
+        <span class="section-label">Your Japanese Text</span>
+        <textarea
+          id="inputText"
+          rows="6"
+          placeholder="ここにテキストを貼り付けてください…"
+          oninput="updateCharCount()"
+        ></textarea>
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 5px;
+          "
+        >
+          <span
+            id="charWarning"
+            style="font-size: 11px; font-style: italic; color: var(--accent); display: none"
+          >
+            ⚠ Long text may hit token limits. Consider splitting into smaller chunks.
+          </span>
+          <span id="charCount" style="font-size: 11px; color: var(--text-muted); margin-left: auto"
+            >0 chars</span
+          >
+        </div>
 
-  <!-- Input -->
-  <div class="card" id="card-input">
-    <span class="section-label">Your Japanese Text</span>
-    <textarea id="inputText" rows="6" placeholder="ここにテキストを貼り付けてください…" oninput="updateCharCount()"></textarea>
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:5px;">
-      <span id="charWarning" style="font-size:11px;font-style:italic;color:var(--accent);display:none;">
-        ⚠ Long text may hit token limits. Consider splitting into smaller chunks.
-      </span>
-      <span id="charCount" style="font-size:11px;color:var(--text-muted);margin-left:auto;">0 chars</span>
-    </div>
+        <!-- Document type -->
+        <div class="row">
+          <div class="small-label">Document type</div>
+          <div class="pills" id="typePills"></div>
+          <div class="type-hint" id="typeHint"></div>
+        </div>
 
-    <!-- Document type -->
-    <div class="row">
-      <div class="small-label">Document type</div>
-      <div class="pills" id="typePills"></div>
-      <div class="type-hint" id="typeHint"></div>
-    </div>
-
-    <!-- JLPT level -->
-    <!-- <div class="row">
+        <!-- JLPT level -->
+        <!-- <div class="row">
       <div class="small-label">My JLPT level — find expressions at this level and suggest simpler alternatives</div>
       <div class="pills" id="levelPills"></div>
     </div> -->
 
-    <button class="analyze-btn" id="analyzeBtn" onclick="analyze()">Analyze &amp; Simplify</button>
-    <div class="error-msg hidden" id="errorMsg"></div>
-  </div>
+        <button class="analyze-btn" id="analyzeBtn" onclick="analyze()">
+          Analyze &amp; Simplify
+        </button>
+        <div class="error-msg hidden" id="errorMsg"></div>
+      </div>
 
-  <!-- Results (hidden until first run) -->
-  <div class="card hidden" id="card-result">
-    <div class="result-header">
-      <span class="section-label" style="margin-bottom:0">Result Text</span>
-      <span class="badge" id="subBadge">0 substitutions applied</span>
-    </div>
-    <div class="result-box" id="resultBox"></div>
-    <button class="copy-btn" onclick="copyResult()">Copy</button>
-  </div>
+      <!-- Results (hidden until first run) -->
+      <div class="card hidden" id="card-result">
+        <div class="result-header">
+          <span class="section-label" style="margin-bottom: 0">Result Text</span>
+          <span class="badge" id="subBadge">0 substitutions applied</span>
+        </div>
+        <div class="result-box" id="resultBox"></div>
+        <button class="copy-btn" onclick="copyResult()">Copy</button>
+      </div>
 
-  <div class="card hidden" id="card-table">
-    <div class="result-header">
-      <span class="section-label" style="margin-bottom:0">Substitutions</span>
-      <button class="toggle-all-btn" id="toggleAllBtn" onclick="toggleAll()">Select all</button>
-    </div>
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th style="width:36px"></th>
-            <th id="colOriginal">Original</th>
-            <th id="colSimpler">Simpler</th>
-            <th>Translation (EN)</th>
-            <th>Note</th>
-          </tr>
-        </thead>
-        <tbody id="subTableBody"></tbody>
-      </table>
-      <div class="empty-msg hidden" id="emptyMsg">No expressions flagged — text looks accessible already 🎉</div>
-    </div>
-  </div>
+      <div class="card hidden" id="card-table">
+        <div class="result-header">
+          <span class="section-label" style="margin-bottom: 0">Substitutions</span>
+          <button class="toggle-all-btn" id="toggleAllBtn" onclick="toggleAll()">Select all</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 36px"></th>
+                <th id="colOriginal">Original</th>
+                <th id="colSimpler">Simpler</th>
+                <th>Translation (EN)</th>
+                <th>Note</th>
+              </tr>
+            </thead>
+            <tbody id="subTableBody"></tbody>
+          </table>
+          <div class="empty-msg hidden" id="emptyMsg">
+            No expressions flagged — text looks accessible already 🎉
+          </div>
+        </div>
+      </div>
+    </main>
 
-</main>
-
-<!-- ══════════════════════════════════════════════
+    <!-- ══════════════════════════════════════════════
      ONBOARDING OVERLAY MARKUP
      ══════════════════════════════════════════════ -->
-<div id="ob-overlay" class="hidden">
-  <svg id="ob-svg" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <mask id="ob-mask">
-        <!-- White = visible (darkened), Black = transparent (spotlight) -->
-        <rect width="100%" height="100%" fill="white"/>
-        <rect id="ob-hole" x="0" y="0" width="0" height="0" rx="10" fill="black"/>
-      </mask>
-    </defs>
-    <rect
-      width="100%" height="100%"
-      fill="rgba(0,0,0,0.72)"
-      mask="url(#ob-mask)"
-      style="pointer-events:none"
-    />
-  </svg>
-</div>
-
-<!-- Spotlight highlight ring -->
-<div id="ob-ring" class="hidden"></div>
-
-<!-- Click blocker (sits behind tooltip, above overlay) -->
-<div id="ob-backdrop" style="display:none"></div>
-
-<!-- Tooltip card -->
-<div id="ob-tooltip" class="hidden">
-  <div class="ob-step-counter">Step <span id="ob-current">1</span> of <span id="ob-total">5</span></div>
-  <div class="ob-title" id="ob-title"></div>
-  <div class="ob-body"  id="ob-body"></div>
-  <div class="ob-footer">
-    <button class="ob-skip" onclick="Onboarding.end()">Skip tour</button>
-    <div class="ob-dots" id="ob-dots"></div>
-    <div class="ob-nav">
-      <button class="ob-prev" id="ob-prev" onclick="Onboarding.prev()">← Back</button>
-      <button class="ob-next" id="ob-next" onclick="Onboarding.next()">Next →</button>
+    <div id="ob-overlay" class="hidden">
+      <svg id="ob-svg" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <mask id="ob-mask">
+            <!-- White = visible (darkened), Black = transparent (spotlight) -->
+            <rect width="100%" height="100%" fill="white" />
+            <rect id="ob-hole" x="0" y="0" width="0" height="0" rx="10" fill="black" />
+          </mask>
+        </defs>
+        <rect
+          width="100%"
+          height="100%"
+          fill="rgba(0,0,0,0.72)"
+          mask="url(#ob-mask)"
+          style="pointer-events: none"
+        />
+      </svg>
     </div>
-  </div>
-</div>
-</body>
+
+    <!-- Spotlight highlight ring -->
+    <div id="ob-ring" class="hidden"></div>
+
+    <!-- Click blocker (sits behind tooltip, above overlay) -->
+    <div id="ob-backdrop" style="display: none"></div>
+
+    <!-- Tooltip card -->
+    <div id="ob-tooltip" class="hidden">
+      <div class="ob-step-counter">
+        Step <span id="ob-current">1</span> of <span id="ob-total">5</span>
+      </div>
+      <div class="ob-title" id="ob-title"></div>
+      <div class="ob-body" id="ob-body"></div>
+      <div class="ob-footer">
+        <button class="ob-skip" onclick="Onboarding.end()">Skip tour</button>
+        <div class="ob-dots" id="ob-dots"></div>
+        <div class="ob-nav">
+          <button class="ob-prev" id="ob-prev" onclick="Onboarding.prev()">← Back</button>
+          <button class="ob-next" id="ob-next" onclick="Onboarding.next()">Next →</button>
+        </div>
+      </div>
+    </div>
+  </body>
 </html>
